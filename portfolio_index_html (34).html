@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lukas Ecke | Frequencies · Matter</title>
+  <meta name="description" content="Portfolio of Lukas Ecke — minimal techno producer, visual artist, and soft active matter biophysics researcher based in Munich." />
+
+  <style>
+    :root {
+      --bg: #171a1c;
+      --text: #f2f0ea;
+      --muted: #9b9b93;
+      --line: rgba(242, 240, 234, 0.14);
+      --accent: #78e7d2;
+      --accent-dim: rgba(120, 231, 210, 0.14);
+      --warning: #c8ff5f;
+      --max: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 4;
+      background: transparent;
+    }
+
+    canvas#field {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 1;
+      background: var(--bg);
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.06;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.65'/%3E%3C/svg%3E");
+      mix-blend-mode: screen;
+    }
+
+    .page {
+      position: relative;
+      z-index: 2;
+    }
+
+    .container {
+      width: min(100% - 2rem, var(--max));
+      margin: 0 auto;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 8;
+      background: linear-gradient(to bottom, rgba(23,26,28,0.86), rgba(23,26,28,0));
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: var(--accent);
+    }
+
+    .nav-right {
+      display: flex;
+      gap: 1.2rem;
+    }
+
+    .stage {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      min-height: 100vh;
+      display: grid;
+      align-items: center;
+      padding: 6rem 0 3rem;
+      pointer-events: none;
+    }
+
+    .stage-grid {
+      height: calc(100vh - 9rem);
+      display: grid;
+      grid-template-columns: 1fr minmax(360px, 0.86fr);
+      gap: clamp(2rem, 6vw, 5rem);
+      align-items: center;
+    }
+
+    .identity {
+      align-self: center;
+      transform: translateY(0);
+      will-change: auto;
+    }
+
+    .label {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--accent);
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+    }
+
+    .pulse {
+      display: inline-block;
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: var(--warning);
+      box-shadow: 0 0 18px var(--warning);
+      animation: pulse 1.6s ease-in-out infinite;
+      margin-right: 0.45rem;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.8); opacity: 0.45; }
+      50% { transform: scale(1.25); opacity: 1; }
+    }
+
+    h1 {
+      font-size: clamp(3rem, 7.6vw, 8rem);
+      line-height: 0.88;
+      letter-spacing: -0.08em;
+      font-weight: 520;
+      margin-bottom: 2rem;
+      max-width: 880px;
+      text-rendering: geometricPrecision;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1 .safe-e {
+      display: inline-block;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-left: 0.015em;
+      margin-right: 0.035em;
+      transform: translateY(0.005em) scaleX(0.94);
+      transform-origin: center;
+    }
+
+    .title-line {
+      display: block;
+      white-space: nowrap;
+    }
+
+    .title-line-matter {
+      margin-top: 0.1em;
+    }
+
+            .content-orbit {
+      pointer-events: auto;
+      position: relative;
+      height: min(72vh, 680px);
+      min-height: 560px;
+      display: grid;
+      place-items: center;
+      overflow: visible;
+    }
+
+    .content-orbit::before {
+      content: "";
+      position: absolute;
+      width: min(58vw, 680px);
+      height: min(58vw, 680px);
+      min-width: 360px;
+      min-height: 360px;
+      border-radius: 43% 57% 54% 46% / 42% 34% 66% 58%;
+      background:
+        radial-gradient(circle at 25% 20%, rgba(120, 231, 210, 0.21), transparent 32%),
+        radial-gradient(circle at 74% 76%, rgba(200, 255, 95, 0.08), transparent 36%),
+        rgba(5, 5, 5, 0.64);
+      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(18px);
+      box-shadow:
+        inset 0 0 0 1px rgba(242, 240, 234, 0.11),
+        0 0 120px rgba(120, 231, 210, 0.08);
+      animation: vessel 10s ease-in-out infinite alternate;
+      transition: filter 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .content-orbit.agitated::before {
+      animation: vessel 2.2s ease-in-out infinite alternate;
+      filter: saturate(1.35) brightness(1.12);
+      box-shadow:
+        inset 0 0 0 1px rgba(242, 240, 234, 0.16),
+        0 0 170px rgba(120, 231, 210, 0.18);
+    }
+
+    .content-orbit::after {
+      content: "";
+      position: absolute;
+      width: min(48vw, 560px);
+      height: min(48vw, 560px);
+      min-width: 310px;
+      min-height: 310px;
+      border-radius: 55% 45% 38% 62% / 66% 42% 58% 34%;
+      border: 1px solid rgba(120, 231, 210, 0.12);
+      transform: rotate(-12deg);
+      animation: vessel-line 12.7s ease-in-out infinite alternate;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .content-orbit.agitated::after {
+      animation: vessel-line 2.6s ease-in-out infinite alternate;
+      opacity: 0.85;
+      transform: rotate(22deg) scale(1.08);
+    }
+
+    @keyframes vessel {
+      from { transform: rotate(-4deg) scale(0.98); border-radius: 43% 57% 54% 46% / 42% 34% 66% 58%; }
+      to { transform: rotate(7deg) scale(1.03); border-radius: 58% 42% 47% 53% / 36% 58% 42% 64%; }
+    }
+
+    @keyframes vessel-line {
+      from { transform: rotate(-12deg) scale(0.98); }
+      to { transform: rotate(16deg) scale(1.04); }
+    }
+
+    .panel {
+      position: relative;
+      z-index: 2;
+      width: min(88%, 520px);
+      height: 500px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(1.4rem, 3.6vw, 2.4rem);
+      color: var(--text);
+      overflow: hidden;
+      transition: transform 0.35s ease;
+    }
+
+    .content-orbit.agitated .panel {
+      transform: scale(1.018) rotate(-0.8deg);
+    }
+
+    .panel-section {
+      position: absolute;
+      inset: clamp(1.4rem, 3.6vw, 2.4rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px) scale(0.98);
+      filter: blur(8px);
+      transition: opacity 0.45s ease, transform 0.45s ease, filter 0.45s ease;
+    }
+
+    .panel-section.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+
+    .panel-index {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--accent);
+      letter-spacing: 0.16em;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      margin-bottom: 0.85rem;
+    }
+
+    h2 {
+      font-size: clamp(1.75rem, 3.8vw, 3.75rem);
+      line-height: 0.96;
+      letter-spacing: -0.055em;
+      font-weight: 520;
+      margin-bottom: 0.9rem;
+    }
+
+    h2 span {
+      display: block;
+      white-space: nowrap;
+    }
+
+    .panel p {
+      color: rgba(242, 240, 234, 0.74);
+      font-size: 0.94rem;
+      line-height: 1.5;
+      max-width: 460px;
+    }
+
+    .meta-list,
+    .tracklist,
+    .contact-grid {
+      margin-top: 1rem;
+      display: grid;
+      gap: 0.42rem;
+    }
+
+    .location-line {
+      margin-top: 1.15rem;
+      display: grid;
+      gap: 0.35rem;
+      color: rgba(242, 240, 234, 0.74);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.72rem;
+    }
+
+    .location-line strong {
+      color: var(--text);
+      font-size: 0.86rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+    }
+
+    .meta-row,
+    .track,
+    .contact-link {
+      position: relative;
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 0.85rem;
+      align-items: baseline;
+      padding: 0.48rem 0.72rem;
+      border-radius: 999px;
+      background: rgba(5, 5, 5, 0.28);
+      box-shadow: inset 0 0 0 1px rgba(242, 240, 234, 0.075);
+      color: rgba(242, 240, 234, 0.74);
+      text-decoration: none;
+      transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+    }
+
+    .meta-row span:first-child,
+    .track-no,
+    .contact-link span:first-child {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.64rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .track:hover,
+    .contact-link:hover {
+      color: var(--text);
+      background: rgba(120, 231, 210, 0.105);
+      transform: translateX(0.35rem);
+    }
+
+    .signal-link {
+      margin-top: 1.25rem;
+      display: inline-grid;
+      grid-template-columns: auto auto;
+      gap: 0.65rem;
+      align-items: baseline;
+      width: fit-content;
+      color: var(--text);
+      text-decoration: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      transition: transform 0.22s ease, letter-spacing 0.22s ease, color 0.22s ease, filter 0.22s ease;
+    }
+
+    .signal-link span {
+      color: var(--accent);
+      font-size: 0.68rem;
+    }
+
+    .signal-link strong {
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+
+    .signal-link::after {
+      content: "↗";
+      color: var(--accent);
+      transition: transform 0.22s ease;
+    }
+
+    .signal-link:hover {
+      color: var(--accent);
+      letter-spacing: 0.16em;
+      transform: translateX(0.5rem);
+      filter: drop-shadow(0 0 10px rgba(120, 231, 210, 0.28));
+    }
+
+    .signal-link:hover::after {
+      transform: translate(0.25rem, -0.25rem);
+    }
+
+    .scroll-space {
+      position: relative;
+      z-index: 1;
+      margin-top: 0;
+    }
+
+    .scroll-marker {
+      min-height: 100vh;
+      display: block;
+      pointer-events: none;
+    }
+
+    .marker-label {
+      display: none;
+    }
+
+    footer {
+      position: relative;
+      z-index: 4;
+      padding: 2rem 0;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    @media (max-width: 900px) {
+      .stage {
+        position: fixed;
+        min-height: 100vh;
+        padding: 7rem 0 2rem;
+      }
+
+      .stage-grid {
+        height: calc(100vh - 9rem);
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: clamp(3rem, 18vw, 7.5rem);
+      }
+
+      .content-orbit {
+        height: 52vh;
+        min-height: 420px;
+      }
+
+      .panel {
+        height: 440px;
+      }
+
+      .scroll-space {
+        margin-top: 0;
+      }
+
+      .scroll-marker {
+        min-height: 100vh;
+      }
+
+      .nav-right {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="field"></canvas>
+  <div class="noise"></div>
+
+  <div class="page">
+    <header>
+      <div class="container">
+        <nav>
+          <a href="#top">web.kartoffel</a>
+          <div class="nav-right">
+            <a href="#intro" class="nav-link active">LOCATION</a>
+            <a href="#sound" class="nav-link">Sound</a>
+            <a href="#visuals" class="nav-link">Visuals</a>
+            <a href="#matter" class="nav-link">Matter</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="stage" aria-label="fixed portfolio stage">
+        <div class="container stage-grid">
+          <div class="identity">
+            <div class="label"><span class="pulse"></span>LOADING</div>
+            <h1><span class="title-line">fr<span class="safe-e">e</span>qu<span class="safe-e">e</span>nci<span class="safe-e">e</span>s</span><span class="title-line title-line-matter">matt<span class="safe-e">e</span>r</span></h1>
+          </div>
+
+          <aside class="content-orbit" aria-label="scrolling content vessel">
+            <div class="panel">
+              <div class="panel-section active" data-panel="intro">
+                <div class="panel-index"><span class="pulse"></span>00 / location</div>
+                <div class="location-line">
+                  <span>creating at</span>
+                  <strong>48.1351° N / 11.5820° E</strong>
+                </div>
+              </div>
+
+              <div class="panel-section" data-panel="sound">
+                <div class="panel-index"><span class="pulse"></span>01 / sound</div>
+                <h2><span>low</span><span>frequency</span><span>rhythms</span></h2>
+                <p>
+                  Minimal and hypnotic techno built from reduced structures, repetition, depth, texture, and slow internal change.
+                </p>
+                <a class="signal-link" href="https://soundcloud.com/lukasnewman" target="_blank" rel="noreferrer">
+                  <span>listen</span>
+                  <strong>soundcloud</strong>
+                </a>
+              </div>
+
+              <div class="panel-section" data-panel="visuals">
+                <div class="panel-index"><span class="pulse"></span>02 / visuals</div>
+                <h2><span>reactive</span><span>dynamic</span><span>visuals</span></h2>
+                <p>
+                  Music-related visuals using noise textures, organic forms, field distortions, slow modulation, and relations to biological and active matter systems.
+                </p>
+                <a class="signal-link" href="https://www.instagram.com/art.kartoffel" target="_blank" rel="noreferrer">
+                  <span>view</span>
+                  <strong>instagram</strong>
+                </a>
+              </div>
+
+              <div class="panel-section" data-panel="matter">
+                <div class="panel-index"><span class="pulse"></span>03 / matter</div>
+                <h2><span>soft</span><span>active</span><span>matter</span></h2>
+                <p>
+                  PhD work in soft active matter biophysics, with interests in collective motion, nematic order, topological defects, microscopy, and image analysis.
+                </p>
+                <a class="signal-link" href="https://github.com/code-kartoffel" target="_blank" rel="noreferrer">
+                  <span>code</span>
+                  <strong>github</strong>
+                </a>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="scroll-space" aria-hidden="true">
+        <section id="intro" class="scroll-marker" data-section="intro"><div class="marker-label">00 / location</div></section>
+        <section id="sound" class="scroll-marker" data-section="sound"><div class="marker-label">01 / sound</div></section>
+        <section id="visuals" class="scroll-marker" data-section="visuals"><div class="marker-label">02 / visuals</div></section>
+        <section id="matter" class="scroll-marker" data-section="matter"><div class="marker-label">03 / matter</div></section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="container">© 2026 WEB.KARTOFFEL</div>
+    </footer>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("field");
+    const ctx = canvas ? canvas.getContext("2d") : null;
+
+    if (!canvas || !ctx) {
+      console.warn("Canvas is not available in this environment.");
+    }
+
+    let width, height, dpr;
+    let mouse = {
+      x: 0,
+      y: 0,
+      rawX: 0,
+      rawY: 0,
+      targetX: 0,
+      targetY: 0,
+      strength: 0,
+      targetStrength: 0,
+      initialized: false
+    };
+
+    function resize() {
+      dpr = window.devicePixelRatio || 1;
+      width = window.innerWidth;
+      height = window.innerHeight;
+      if (!canvas) return;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+      if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+
+    window.addEventListener("mousemove", (event) => {
+      mouse.rawX = event.clientX;
+      mouse.rawY = event.clientY;
+      mouse.targetX = event.clientX;
+      mouse.targetY = event.clientY;
+      mouse.targetStrength = 1;
+
+      if (!mouse.initialized) {
+        mouse.x = mouse.targetX;
+        mouse.y = mouse.targetY;
+        mouse.strength = 1;
+        mouse.initialized = true;
+      }
+    });
+
+    window.addEventListener("mouseleave", () => {
+      mouse.targetStrength = 0;
+      kickHoverActive = false;
+    });
+
+    let activePanel = "intro";
+    let audioContext = null;
+    let audioUnlocked = false;
+    let kickHoverActive = false;
+    let lastKickTime = 0;
+    let nextClickTime = 0;
+    let clickStep = 0;
+    let subOsc = null;
+    let subGain = null;
+    let subFilter = null;
+    let subTargetGain = 0;
+    let lastInteractionTime = performance.now();
+
+    let syntheticMouse = {
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      targetX: 0,
+      targetY: 0,
+      strength: 0,
+      initialized: false,
+      nextTurn: 0
+    };
+
+    function initAudio() {
+      if (audioUnlocked) return;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      audioContext = new AudioCtx();
+      audioContext.resume();
+
+      subOsc = audioContext.createOscillator();
+      subGain = audioContext.createGain();
+      subFilter = audioContext.createBiquadFilter();
+
+      subOsc.type = "sine";
+      subOsc.frequency.setValueAtTime(43.65, audioContext.currentTime); // F1
+      subGain.gain.setValueAtTime(0.000001, audioContext.currentTime);
+      subFilter.type = "lowpass";
+      subFilter.frequency.setValueAtTime(95, audioContext.currentTime);
+      subFilter.Q.setValueAtTime(0.8, audioContext.currentTime);
+
+      subOsc.connect(subFilter);
+      subFilter.connect(subGain);
+      subGain.connect(audioContext.destination);
+      subOsc.start();
+
+      audioUnlocked = true;
+    }
+
+    window.addEventListener("pointerdown", initAudio, { once: true });
+    window.addEventListener("keydown", initAudio, { once: true });
+
+    function makeDistortionCurve(amount) {
+      const samples = 256;
+      const curve = new Float32Array(samples);
+      const deg = Math.PI / 180;
+      for (let i = 0; i < samples; i++) {
+        const x = (i * 2) / samples - 1;
+        curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
+      }
+      return curve;
+    }
+
+    function createKickReverbBuffer(duration, decay) {
+      const sampleRate = audioContext.sampleRate;
+      const length = Math.max(1, Math.floor(sampleRate * duration));
+      const impulse = audioContext.createBuffer(2, length, sampleRate);
+
+      for (let channel = 0; channel < 2; channel++) {
+        const data = impulse.getChannelData(channel);
+        for (let i = 0; i < length; i++) {
+          const progress = i / length;
+          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - progress, decay);
+        }
+      }
+
+      return impulse;
+    }
+
+    function playKick(xNorm, yNorm) {
+      if (!audioUnlocked || !audioContext || audioContext.state !== "running") return;
+
+      const now = audioContext.currentTime;
+      const drive = 8 + xNorm * 42;
+      const startFreq = 115 - yNorm * 38;
+      const endFreq = 38 - yNorm * 8;
+      const decay = 0.18 + (1 - yNorm) * 0.16;
+      const gainLevel = 0.75 + xNorm * 0.35;
+
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const dryGain = audioContext.createGain();
+      const delaySend = audioContext.createGain();
+      const reverbSend = audioContext.createGain();
+      const delay = audioContext.createDelay(1.0);
+      const delayFeedback = audioContext.createGain();
+      const delayTone = audioContext.createBiquadFilter();
+      const reverb = audioContext.createConvolver();
+      const reverbTone = audioContext.createBiquadFilter();
+      const filter = audioContext.createBiquadFilter();
+      const shaper = audioContext.createWaveShaper();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(startFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(24, endFreq), now + decay);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(gainLevel, now + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(140 + xNorm * 1100, now);
+      filter.Q.setValueAtTime(0.7 + xNorm * 4.0, now);
+
+      shaper.curve = makeDistortionCurve(drive);
+      shaper.oversample = "4x";
+
+      dryGain.gain.setValueAtTime(1.0, now);
+      delaySend.gain.setValueAtTime(0.32 + xNorm * 0.22, now);
+      reverbSend.gain.setValueAtTime(0.22 + (1 - yNorm) * 0.18, now);
+
+      delay.delayTime.setValueAtTime(0.39, now); // dotted 1/8 at ~115 BPM
+      delayFeedback.gain.setValueAtTime(0.34 + xNorm * 0.28, now);
+      delayTone.type = "lowpass";
+      delayTone.frequency.setValueAtTime(420 + xNorm * 900, now);
+
+      reverb.buffer = createKickReverbBuffer(0.55 + (1 - yNorm) * 0.35, 1.8 + xNorm * 1.6);
+      reverbTone.type = "lowpass";
+      reverbTone.frequency.setValueAtTime(520 + xNorm * 850, now);
+
+      osc.connect(shaper);
+      shaper.connect(filter);
+      filter.connect(gain);
+
+      gain.connect(dryGain);
+      dryGain.connect(audioContext.destination);
+
+      gain.connect(delaySend);
+      delaySend.connect(delay);
+      delay.connect(delayTone);
+      delayTone.connect(audioContext.destination);
+      delayTone.connect(delayFeedback);
+      delayFeedback.connect(delay);
+
+      gain.connect(reverbSend);
+      reverbSend.connect(reverb);
+      reverb.connect(reverbTone);
+      reverbTone.connect(audioContext.destination);
+
+      if (subGain) {
+        const currentSub = Math.max(0.0001, subGain.gain.value || 0.0001);
+        subGain.gain.cancelScheduledValues(now);
+        subGain.gain.setValueAtTime(currentSub, now);
+        subGain.gain.exponentialRampToValueAtTime(0.035, now + 0.018);
+        subGain.gain.exponentialRampToValueAtTime(Math.max(0.000001, subTargetGain), now + 0.24);
+      }
+
+      osc.start(now);
+      osc.stop(now + decay + 0.05);
+    }
+
+    function playHypnoticClick(xNorm, yNorm) {
+      if (!audioUnlocked || !audioContext || audioContext.state !== "running") return;
+
+      const now = audioContext.currentTime;
+      const osc = audioContext.createOscillator();
+      const amp = audioContext.createGain();
+      const clickFilter = audioContext.createBiquadFilter();
+      const dry = audioContext.createGain();
+      const delaySend = audioContext.createGain();
+      const delay = audioContext.createDelay(2.0);
+      const feedback = audioContext.createGain();
+      const delayTone = audioContext.createBiquadFilter();
+      const reverbSend = audioContext.createGain();
+      const reverb = audioContext.createConvolver();
+      const reverbTone = audioContext.createBiquadFilter();
+
+      const pattern = [0.0, 0.37, 0.0, 0.62, 0.18, 0.0, 0.48, 0.0];
+      const accent = pattern[clickStep % pattern.length];
+      clickStep += 1;
+
+      const freq = 900 + xNorm * 2300 + accent * 900;
+      const clickLength = 0.018 + yNorm * 0.018;
+
+      osc.type = xNorm > 0.55 ? "triangle" : "sine";
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.62, now + clickLength);
+
+      amp.gain.setValueAtTime(0.0001, now);
+      amp.gain.exponentialRampToValueAtTime(0.22 + accent * 0.16, now + 0.003);
+      amp.gain.exponentialRampToValueAtTime(0.0001, now + clickLength);
+
+      clickFilter.type = "bandpass";
+      clickFilter.frequency.setValueAtTime(850 + xNorm * 2600, now);
+      clickFilter.Q.setValueAtTime(4 + yNorm * 8, now);
+
+      dry.gain.setValueAtTime(0.75, now);
+      delaySend.gain.setValueAtTime(0.85 + xNorm * 0.45, now);
+      delay.delayTime.setValueAtTime(0.22 + accent * 0.18 + xNorm * 0.12, now);
+      feedback.gain.setValueAtTime(0.68 + xNorm * 0.18, now);
+
+      delayTone.type = "highpass";
+      delayTone.frequency.setValueAtTime(420 + yNorm * 520, now);
+
+      reverbSend.gain.setValueAtTime(0.8 + (1 - yNorm) * 0.42, now);
+      reverb.buffer = createKickReverbBuffer(1.7 + (1 - yNorm) * 1.3, 1.1 + xNorm * 0.8);
+      reverbTone.type = "lowpass";
+      reverbTone.frequency.setValueAtTime(1800 + xNorm * 3800, now);
+
+      osc.connect(clickFilter);
+      clickFilter.connect(amp);
+
+      amp.connect(dry);
+      dry.connect(audioContext.destination);
+
+      amp.connect(delaySend);
+      delaySend.connect(delay);
+      delay.connect(delayTone);
+      delayTone.connect(audioContext.destination);
+      delayTone.connect(feedback);
+      feedback.connect(delay);
+
+      amp.connect(reverbSend);
+      reverbSend.connect(reverb);
+      reverb.connect(reverbTone);
+      reverbTone.connect(audioContext.destination);
+
+      osc.start(now);
+      osc.stop(now + clickLength + 0.03);
+    }
+
+    function updateKickHover(event) {
+      const element = document.elementFromPoint(event.clientX, event.clientY);
+      const overBubble = element && element.closest && element.closest(".content-orbit");
+      kickHoverActive = activePanel === "sound" && !overBubble;
+      subTargetGain = kickHoverActive ? 0.42 : 0;
+    }
+
+    function registerInteraction(event) {
+      lastInteractionTime = performance.now();
+      if (event && event.clientX !== undefined && event.clientY !== undefined) {
+        updateKickHover(event);
+      }
+    }
+
+    window.addEventListener("pointermove", registerInteraction);
+    window.addEventListener("scroll", registerInteraction, { passive: true });
+    window.addEventListener("wheel", registerInteraction, { passive: true });
+    window.addEventListener("touchstart", registerInteraction, { passive: true });
+    window.addEventListener("keydown", registerInteraction);
+
+    function stopAudioInteraction() {
+      kickHoverActive = false;
+      subTargetGain = 0;
+      lastInteractionTime = 0;
+
+      if (audioUnlocked && subGain && audioContext) {
+        const now = audioContext.currentTime;
+        const current = Math.max(0.000001, subGain.gain.value || 0.000001);
+        subGain.gain.cancelScheduledValues(now);
+        subGain.gain.setValueAtTime(current, now);
+        subGain.gain.exponentialRampToValueAtTime(0.000001, now + 0.18);
+      }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopAudioInteraction();
+      }
+    });
+
+    window.addEventListener("blur", stopAudioInteraction);
+
+    function blendAngles(a, b, amount) {
+      // Interpolate director angles through doubled-angle space.
+      // This avoids sudden jumps because n and -n are equivalent.
+      const x = (1 - amount) * Math.cos(2 * a) + amount * Math.cos(2 * b);
+      const y = (1 - amount) * Math.sin(2 * a) + amount * Math.sin(2 * b);
+      return 0.5 * Math.atan2(y, x);
+    }
+
+    function pointInfluence(x, y, point, radius) {
+      if (!point || point.strength < 0.001) return 0;
+      const dx = x - point.x;
+      const dy = y - point.y;
+      const r2 = dx * dx + dy * dy;
+      return Math.exp(-r2 / radius) * point.strength;
+    }
+
+    function mouseInfluence(x, y) {
+      return pointInfluence(x, y, mouse, 31000);
+    }
+
+    function syntheticInfluence(x, y) {
+      return activePanel === "matter" ? pointInfluence(x, y, syntheticMouse, 36000) : 0;
+    }
+
+    function updateSyntheticMouse(t) {
+      const active = activePanel === "matter";
+      const margin = 70;
+      const maxX = Math.max(margin, width - margin);
+      const maxY = Math.max(margin, height - margin);
+
+      if (!syntheticMouse.initialized) {
+        syntheticMouse.x = width * 0.24;
+        syntheticMouse.y = height * 0.48;
+        syntheticMouse.targetX = syntheticMouse.x;
+        syntheticMouse.targetY = syntheticMouse.y;
+        syntheticMouse.initialized = true;
+      }
+
+      syntheticMouse.strength += ((active ? 1 : 0) - syntheticMouse.strength) * (active ? 0.035 : 0.02);
+      if (!active && syntheticMouse.strength < 0.002) return;
+
+      if (active && t > syntheticMouse.nextTurn) {
+        syntheticMouse.targetX = margin + Math.random() * Math.max(1, width - margin * 2);
+        syntheticMouse.targetY = margin + Math.random() * Math.max(1, height - margin * 2);
+        syntheticMouse.nextTurn = t + 1700 + Math.random() * 2800;
+      }
+
+      let ax = (syntheticMouse.targetX - syntheticMouse.x) * 0.0072;
+      let ay = (syntheticMouse.targetY - syntheticMouse.y) * 0.0072;
+
+      if (mouse.strength > 0.05) {
+        const dx = syntheticMouse.x - mouse.rawX;
+        const dy = syntheticMouse.y - mouse.rawY;
+        const d2 = dx * dx + dy * dy;
+        const repelRadius = 260;
+        if (d2 < repelRadius * repelRadius && d2 > 1) {
+          const d = Math.sqrt(d2);
+          const repel = Math.pow(1 - d / repelRadius, 2) * 2.8;
+          ax += (dx / d) * repel;
+          ay += (dy / d) * repel;
+
+          syntheticMouse.targetX += (dx / d) * repel * 28;
+          syntheticMouse.targetY += (dy / d) * repel * 28;
+        }
+      }
+
+      syntheticMouse.vx = (syntheticMouse.vx + ax) * 0.94;
+      syntheticMouse.vy = (syntheticMouse.vy + ay) * 0.94;
+
+      const speed = Math.sqrt(syntheticMouse.vx * syntheticMouse.vx + syntheticMouse.vy * syntheticMouse.vy);
+      const maxSpeed = 8.8;
+      if (speed > maxSpeed) {
+        syntheticMouse.vx = syntheticMouse.vx / speed * maxSpeed;
+        syntheticMouse.vy = syntheticMouse.vy / speed * maxSpeed;
+      }
+
+      syntheticMouse.x += syntheticMouse.vx;
+      syntheticMouse.y += syntheticMouse.vy;
+
+      if (syntheticMouse.x < margin || syntheticMouse.x > maxX) {
+        syntheticMouse.vx *= -0.6;
+        syntheticMouse.x = Math.min(maxX, Math.max(margin, syntheticMouse.x));
+        syntheticMouse.targetX = margin + Math.random() * Math.max(1, width - margin * 2);
+      }
+
+      if (syntheticMouse.y < margin || syntheticMouse.y > maxY) {
+        syntheticMouse.vy *= -0.6;
+        syntheticMouse.y = Math.min(maxY, Math.max(margin, syntheticMouse.y));
+        syntheticMouse.targetY = margin + Math.random() * Math.max(1, height - margin * 2);
+      }
+    }
+
+    function angleField(x, y, t) {
+      const nx = x / width - 0.5;
+      const ny = y / height - 0.5;
+
+      let angle =
+        Math.sin(nx * 7.0 + t * 0.00042) * 1.4 +
+        Math.cos(ny * 6.0 - t * 0.00031) * 1.1 +
+        Math.sin((nx + ny) * 9.0 + t * 0.00023) * 0.8;
+
+      const d1x = width * (0.34 + 0.08 * Math.sin(t * 0.00012));
+      const d1y = height * (0.45 + 0.08 * Math.cos(t * 0.00016));
+      const d2x = width * (0.68 + 0.06 * Math.cos(t * 0.00011));
+      const d2y = height * (0.56 + 0.07 * Math.sin(t * 0.00015));
+
+      angle += 0.5 * Math.atan2(y - d1y, x - d1x);
+      angle -= 0.5 * Math.atan2(y - d2y, x - d2x);
+
+      if (mouse.strength > 0.001) {
+        const dx = x - mouse.x;
+        const dy = y - mouse.y;
+        const influence = mouseInfluence(x, y);
+
+        // Local +1 vortex: director angle follows phi + pi/2 around the cursor.
+        // The smoothed cursor makes the field relax back slowly instead of snapping.
+        const vortexAngle = Math.atan2(dy, dx) + Math.PI / 2;
+        angle = blendAngles(angle, vortexAngle, Math.min(0.92, influence * 1.12));
+      }
+
+      if (activePanel === "matter" && syntheticMouse.strength > 0.001) {
+        const dx = x - syntheticMouse.x;
+        const dy = y - syntheticMouse.y;
+        const influence = syntheticInfluence(x, y);
+        const vortexAngle = Math.atan2(dy, dx) + Math.PI / 2;
+        angle = blendAngles(angle, vortexAngle, Math.min(0.9, influence * 1.08));
+      }
+
+      return angle;
+    }
+
+    const targetFPS = 30;
+    const frameInterval = 1000 / targetFPS;
+    let lastFrameTime = 0;
+
+    function draw(t) {
+      if (!ctx) return;
+
+      if (t - lastFrameTime < frameInterval) {
+        requestAnimationFrame(draw);
+        return;
+      }
+
+      lastFrameTime = t - ((t - lastFrameTime) % frameInterval);
+
+      // Fast attack, slow release.
+      // The vortex position follows the cursor quickly,
+      // but the field influence fades away slowly.
+      mouse.x += (mouse.targetX - mouse.x) * 0.32;
+      mouse.y += (mouse.targetY - mouse.y) * 0.32;
+
+      const strengthEase = mouse.targetStrength > mouse.strength ? 0.28 : 0.0015;
+      mouse.strength += (mouse.targetStrength - mouse.strength) * strengthEase;
+      updateSyntheticMouse(t);
+
+      const recentlyActive = t - lastInteractionTime < 5000;
+
+      if (!recentlyActive) {
+        kickHoverActive = false;
+        subTargetGain = 0;
+      }
+
+      const audioShouldRun = kickHoverActive && recentlyActive;
+
+      if (audioUnlocked && subGain) {
+        const now = audioContext.currentTime;
+        const current = Math.max(0.000001, subGain.gain.value || 0.000001);
+        const target = audioShouldRun ? Math.max(0.000001, subTargetGain) : 0.000001;
+        subGain.gain.cancelScheduledValues(now);
+        subGain.gain.setValueAtTime(current, now);
+        subGain.gain.exponentialRampToValueAtTime(target, now + 0.28);
+      }
+
+      if (audioShouldRun && audioUnlocked) {
+        const xNorm = mouse.targetX / width;
+        const yNorm = mouse.targetY / height;
+        const kickInterval = 520;
+        const clickChance = 0.42 + xNorm * 0.18;
+
+        if (t - lastKickTime > kickInterval) {
+          lastKickTime = t;
+          playKick(xNorm, yNorm);
+        }
+
+        if (t > nextClickTime) {
+          if (Math.random() < clickChance) {
+            playHypnoticClick(xNorm, yNorm);
+          }
+          nextClickTime = t + 420 + Math.random() * 980 + yNorm * 420;
+        }
+      }
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "rgb(23, 26, 28)";
+      ctx.fillRect(0, 0, width, height);
+
+      const spacing = Math.max(28, Math.min(44, width / 34));
+      const len = spacing * 0.52;
+
+      for (let y = spacing * 0.8; y < height; y += spacing) {
+        for (let x = spacing * 0.8; x < width; x += spacing) {
+          const jitterX = Math.sin(y * 0.017 + t * 0.0004) * 3;
+          const jitterY = Math.cos(x * 0.013 - t * 0.00035) * 3;
+          const px = x + jitterX;
+          const py = y + jitterY;
+          const a = angleField(px, py, t);
+
+          const fadeX = Math.abs(px / width - 0.5) * 2;
+          const fadeY = Math.abs(py / height - 0.5) * 2;
+          const edgeFade = 1 - Math.max(fadeX, fadeY) * 0.68;
+          const realProximity = mouseInfluence(px, py);
+          const syntheticProximity = syntheticInfluence(px, py);
+          const proximity = Math.max(realProximity, syntheticProximity);
+          const visualsActive = activePanel === "visuals";
+          const matterActive = activePanel === "matter";
+          const alpha = Math.min(0.72, Math.max(0.035, 0.21 * edgeFade) + proximity * 0.36 + (visualsActive ? 0.06 : 0));
+
+          const colorShift = (visualsActive || matterActive) ? Math.min(1, proximity * 1.55) : 0;
+          const r = Math.round(120 + (200 - 120) * colorShift);
+          const g = Math.round(231 + (255 - 231) * colorShift);
+          const b = Math.round(210 + (95 - 210) * colorShift);
+
+          ctx.strokeStyle = "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
+          ctx.lineWidth = (visualsActive ? 1.85 : 1.12) + proximity * ((visualsActive || matterActive) ? 1.12 : 0.62);
+          ctx.beginPath();
+          ctx.moveTo(px - Math.cos(a) * len / 2, py - Math.sin(a) * len / 2);
+          ctx.lineTo(px + Math.cos(a) * len / 2, py + Math.sin(a) * len / 2);
+          ctx.stroke();
+        }
+      }
+
+      if (activePanel === "matter" && syntheticMouse.strength > 0.01) {
+        const dotAlpha = Math.min(0.9, syntheticMouse.strength);
+        ctx.beginPath();
+        ctx.arc(syntheticMouse.x, syntheticMouse.y, 4.5 + Math.sin(t * 0.006) * 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(200, 255, 95, " + dotAlpha + ")";
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(syntheticMouse.x, syntheticMouse.y, 18 + Math.sin(t * 0.003) * 5, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(200, 255, 95, " + (0.16 * dotAlpha) + ")";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    requestAnimationFrame(draw);
+
+    const orbit = document.querySelector(".content-orbit");
+
+    if (orbit) {
+      orbit.addEventListener("mouseenter", () => {
+        orbit.classList.add("agitated");
+      });
+
+      orbit.addEventListener("mouseleave", () => {
+        orbit.classList.remove("agitated");
+      });
+    }
+
+    const markers = [...document.querySelectorAll(".scroll-marker")];
+    const panels = [...document.querySelectorAll(".panel-section")];
+    const links = [...document.querySelectorAll(".nav-link")];
+
+    function setActive(id) {
+      activePanel = id;
+      panels.forEach(panel => panel.classList.toggle("active", panel.dataset.panel === id));
+      links.forEach(link => link.classList.toggle("active", link.getAttribute("href") === "#" + id));
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+      if (visible) {
+        setActive(visible.target.dataset.section);
+      }
+    }, {
+      threshold: [0.32, 0.5, 0.68],
+      rootMargin: "-18% 0px -18% 0px"
+    });
+
+    markers.forEach(marker => observer.observe(marker));
+  </script>
+</body>
+</html>
